@@ -1,168 +1,65 @@
-import { env } from "@/env";
-import { hashPassword, isHashedPassword, verifyPassword } from "@/lib/password";
+import "server-only";
 import { db } from "@/server/db";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth, { type DefaultSession, type Session } from "next-auth";
-import { type Adapter } from "next-auth/adapters";
-import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
+import { cache } from "react";
 
-declare module "next-auth" {
-  interface Session extends DefaultSession {
-    user: {
-      id: string;
-      hasAccess: boolean;
-      location?: string;
-      role: string;
-      isAdmin: boolean;
-    } & DefaultSession["user"];
-  }
-
-  interface User {
+export type AppSession = {
+  user: {
+    id: string;
+    clerkId: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
     hasAccess: boolean;
+    location: string | null;
     role: string;
+    isAdmin: boolean;
+  };
+};
+
+const DEFAULT_LOCAL_USER_EMAIL = process.env.LOCAL_USER_EMAIL ?? "local@allweone.app";
+const DEFAULT_LOCAL_USER_NAME = process.env.LOCAL_USER_NAME ?? "Local Workspace";
+
+const syncAppUser = cache(async (): Promise<AppSession> => {
+  let user = await db.user.findUnique({
+    where: { email: DEFAULT_LOCAL_USER_EMAIL },
+  });
+
+  if (!user) {
+    user = await db.user.create({
+      data: {
+        email: DEFAULT_LOCAL_USER_EMAIL,
+        hasAccess: true,
+        name: DEFAULT_LOCAL_USER_NAME,
+        role: "ADMIN",
+      },
+    });
   }
-}
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
-  trustHost: true,
-  session: {
-    strategy: "jwt",
-  },
-  pages: {
-    signIn: "/auth/signin",
-  },
-  callbacks: {
-    async jwt({ token, user, trigger, session }) {
-      if (user) {
-        token.id = user.id;
-        token.hasAccess = user.hasAccess;
-        token.name = user.name;
-        token.image = user.image;
-        token.picture = user.image;
-        token.location = (user as Session["user"]).location;
-        token.role = user.role;
-        token.isAdmin = user.role === "ADMIN";
-      }
-
-      if (trigger === "update" && (session as Session)?.user) {
-        const user = await db.user.findUnique({
-          where: { id: token.id as string },
-        });
-
-        if (session) {
-          token.name = (session as Session).user.name;
-          token.image = (session as Session).user.image;
-          token.picture = (session as Session).user.image;
-          token.location = (session as Session).user.location;
-          token.role = (session as Session).user.role;
-          token.isAdmin = (session as Session).user.role === "ADMIN";
-        }
-
-        if (user) {
-          token.hasAccess = user.hasAccess ?? false;
-          token.role = user.role;
-          token.isAdmin = user.role === "ADMIN";
-        }
-      }
-
-      return token;
-    },
-    async session({ session, token }) {
-      session.user.id = token.id as string;
-      session.user.hasAccess = token.hasAccess as boolean;
-      session.user.location = token.location as string;
-      session.user.role = token.role as string;
-      session.user.isAdmin = token.role === "ADMIN";
-      return session;
-    },
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const dbUser = await db.user.findUnique({
-          where: { email: user.email! },
-          select: { id: true, hasAccess: true, role: true },
-        });
-
-        if (dbUser) {
-          user.hasAccess = dbUser.hasAccess;
-          user.role = dbUser.role;
-        } else {
-          user.hasAccess = false;
-          user.role = "USER";
-        }
-      }
-
-      if (account?.provider === "credentials") {
-        user.hasAccess = true;
-        user.role = "USER";
-      }
-
-      return true;
-    },
-  },
-
-  adapter: PrismaAdapter(db) as Adapter,
-  providers: [
-    CredentialsProvider({
-      name: "Email & Password",
-      credentials: {
-        email: { label: "Email", type: "email", placeholder: "you@example.com" },
-        password: { label: "Password", type: "password" },
+  if (!user.hasAccess || user.name !== DEFAULT_LOCAL_USER_NAME) {
+    user = await db.user.update({
+      where: { id: user.id },
+      data: {
+        hasAccess: true,
+        name: DEFAULT_LOCAL_USER_NAME,
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+    });
+  }
 
-        let user = await db.user.findUnique({
-          where: { email: credentials.email as string },
-        });
-
-        if (!user) {
-          user = await db.user.create({
-            data: {
-              email: credentials.email as string,
-              name: (credentials.email as string).split("@")[0],
-              password: await hashPassword(credentials.password as string),
-              hasAccess: true,
-              role: "USER",
-            },
-          });
-        } else {
-          const isValidPassword = await verifyPassword(
-            credentials.password as string,
-            user.password,
-          );
-
-          if (!isValidPassword) {
-            return null;
-          }
-
-          if (user.password && !isHashedPassword(user.password)) {
-            user = await db.user.update({
-              where: { id: user.id },
-              data: {
-                password: await hashPassword(credentials.password as string),
-              },
-            });
-          }
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          hasAccess: user.hasAccess,
-          role: user.role,
-        };
-      },
-    }),
-    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: env.GOOGLE_CLIENT_ID,
-            clientSecret: env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
-  ],
+  return {
+    user: {
+      clerkId: user.clerkId ?? "local-workspace-user",
+      email: user.email,
+      hasAccess: user.hasAccess,
+      id: user.id,
+      image: user.image,
+      isAdmin: user.role === "ADMIN",
+      location: user.location,
+      name: user.name,
+      role: user.role,
+    },
+  };
 });
+
+export async function auth() {
+  return syncAppUser();
+}

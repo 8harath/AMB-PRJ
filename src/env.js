@@ -1,10 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-const inferredVercelUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : undefined;
-
 export const env = createEnv({
   server: {
     DATABASE_URL: z.string().url(),
@@ -17,25 +13,13 @@ export const env = createEnv({
     GOOGLE_GEMINI_API_KEY: z.string(),
     OPENAI_API_KEY: z.string().optional(),
     TOGETHER_AI_API_KEY: z.string().optional(),
-    GOOGLE_CLIENT_ID: z.string().optional(),
-    GOOGLE_CLIENT_SECRET: z.string().optional(),
     UNSPLASH_ACCESS_KEY: z.string().optional(),
     UPLOADTHING_TOKEN: z.string().optional(),
-    NEXTAUTH_URL: z.preprocess(
-      (value) => inferredVercelUrl ?? value,
-      z.string().url(),
-    ),
-    NEXTAUTH_SECRET:
-      process.env.NODE_ENV === "production"
-        ? z.string()
-        : z.string().optional(),
   },
 
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     DIRECT_URL: process.env.DIRECT_URL,
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
     TAVILY_API_KEY: process.env.TAVILY_API_KEY,
@@ -43,8 +27,6 @@ export const env = createEnv({
     GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     TOGETHER_AI_API_KEY: process.env.TOGETHER_AI_API_KEY,
-    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
   },
 
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,

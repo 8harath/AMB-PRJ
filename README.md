@@ -110,17 +110,14 @@ Before you begin, ensure you have the following installed:
    Create a `.env` file in the root directory with the following variables:
 
    ```env
+   # Database
+   DATABASE_URL=""
+   DIRECT_URL=""
+
    # AI Providers
+   GOOGLE_GEMINI_API_KEY=""
    OPENAI_API_KEY=""
    TOGETHER_AI_API_KEY=""
-
-   # Next Auth Configuration
-   NEXTAUTH_SECRET=""
-   NEXTAUTH_URL="http://localhost:3000"
-
-   # Google OAuth Provider
-   GOOGLE_CLIENT_ID=""
-   GOOGLE_CLIENT_SECRET=""
 
    # File Upload Service
    UPLOADTHING_TOKEN=""
@@ -128,8 +125,9 @@ Before you begin, ensure you have the following installed:
    UNSPLASH_ACCESS_KEY=""
    TAVILY_API_KEY=""
 
-   # PostgreSQL Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/presentation_ai"
+   # Optional local no-auth workspace identity
+   LOCAL_USER_EMAIL="local@allweone.app"
+   LOCAL_USER_NAME="Local Workspace"
    ```
 
    > 💡 **Tip**: Copy `.env.example` to `.env` and fill in your actual values.
@@ -139,8 +137,13 @@ Before you begin, ensure you have the following installed:
 1. **Initialize the database**
 
    ```bash
-   pnpm db:push
+   npm run setup:supabase
    ```
+
+   This will:
+   - generate the Prisma client
+   - create/update all tables in your Supabase Postgres database
+   - seed the local workspace user used when authentication is disabled
 
 1. **Start the development server**
 
@@ -151,6 +154,30 @@ Before you begin, ensure you have the following installed:
 1. **Open the application**
 
    Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Vercel + Supabase Deployment
+
+For a no-auth deployment, the minimum Vercel environment variables are:
+
+- `DATABASE_URL`: Supabase pooled connection string
+- `DIRECT_URL`: Supabase direct Postgres connection string
+- `GOOGLE_GEMINI_API_KEY`: required for Gemini-powered outline and presentation generation
+
+Optional variables:
+
+- `OPENAI_API_KEY`: only if you want OpenAI models selectable
+- `TOGETHER_AI_API_KEY`: only if you want AI image generation through Together
+- `UPLOADTHING_TOKEN`: only if you want file uploads
+- `UNSPLASH_ACCESS_KEY`: only if you want stock image search from Unsplash
+- `TAVILY_API_KEY`: only if you want web search during outline generation
+- `LOCAL_USER_EMAIL`: rename the built-in local workspace user
+- `LOCAL_USER_NAME`: display name for the built-in local workspace user
+
+To keep the repo updated locally, run:
+
+```bash
+npm run repo:update
+```
 
 ## 💻 Usage
 

@@ -1,7 +1,8 @@
-import NextAuthProvider from "@/provider/NextAuthProvider";
+import { Button } from "@/components/ui/button";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import "@/styles/globals.css";
+import Link from "next/link";
 import { type Metadata } from "next";
 import { Inter } from "next/font/google";
 
@@ -19,16 +20,22 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <TanStackQueryProvider>
-      <NextAuthProvider>
-        <html lang="en">
-          <body className={`${inter.className} antialiased`}>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-              {children}
-            </ThemeProvider>
-          </body>
-        </html>
-      </NextAuthProvider>
-    </TanStackQueryProvider>
+    <html lang="en">
+      <body className={`${inter.className} antialiased`}>
+        <TanStackQueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <header className="pointer-events-none fixed right-4 top-4 z-50">
+              <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
+                <span className="text-sm text-muted-foreground">Local mode</span>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/presentation">Dashboard</Link>
+                </Button>
+              </div>
+            </header>
+            {children}
+          </ThemeProvider>
+        </TanStackQueryProvider>
+      </body>
+    </html>
   );
 }
