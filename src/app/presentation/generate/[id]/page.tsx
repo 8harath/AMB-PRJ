@@ -24,6 +24,14 @@ import { useEffect, useRef } from "react";
 
 export const PRESENTATION_GENERATION_COOKIE = "presentation_generation_pending";
 
+function normalizeOutline(outline: unknown): string[] {
+  if (!Array.isArray(outline)) {
+    return [];
+  }
+
+  return outline.filter((item): item is string => typeof item === "string");
+}
+
 export default function PresentationGenerateWithIdPage() {
   const router = useRouter();
   const params = useParams();
@@ -109,7 +117,7 @@ export default function PresentationGenerateWithIdPage() {
       );
 
       if (presentationData.presentation?.outline) {
-        setOutline(presentationData.presentation.outline);
+        setOutline(normalizeOutline(presentationData.presentation.outline));
       }
 
       // Load search results if available

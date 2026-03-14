@@ -70,14 +70,22 @@ export const PlaceholderElement = withHOC(
     const { openFilePicker } = useFilePicker({
       accept: currentContent!.accept,
       multiple: true,
-      onFilesSelected: ({ plainFiles: updatedFiles }) => {
+      onFilesSelected: (data) => {
+        if (!("plainFiles" in data) || data.plainFiles.length === 0) return;
+
+        const updatedFiles = data.plainFiles;
+
         const firstFile = updatedFiles[0];
+        if (!firstFile) return;
+
         const restFiles = updatedFiles.slice(1);
 
         replaceCurrentPlaceholder(firstFile);
 
         if (restFiles.length > 0) {
-          editor.getTransforms(PlaceholderPlugin).insert.media(restFiles);
+          editor
+            .getTransforms(PlaceholderPlugin)
+            .insert.media(restFiles as unknown as FileList);
         }
       },
     });

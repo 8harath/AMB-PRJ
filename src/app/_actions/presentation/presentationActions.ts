@@ -3,7 +3,7 @@
 import { type PlateSlide } from "@/components/presentation/utils/parser";
 import { auth } from "@/server/auth";
 import { db } from "@/server/db";
-import { DocumentType } from "@prisma/client";
+import { DocumentType, Prisma } from "@prisma/client";
 
 type PresentationContent = {
   slides: PlateSlide[];
@@ -56,12 +56,12 @@ export async function createPresentation({
         userId: session.user.id,
         presentation: {
           create: {
-            content,
+            content: content as unknown as Prisma.InputJsonValue,
             theme,
             imageSource,
             presentationStyle,
             language,
-            outline: outline ?? [],
+            outline: (outline ?? []) as Prisma.InputJsonValue,
           },
         },
       },
@@ -145,13 +145,13 @@ export async function updatePresentation({
         presentation: {
           update: {
             prompt,
-            content,
+            content: content as Prisma.InputJsonValue | undefined,
             theme,
             imageSource,
             presentationStyle,
             language,
-            outline,
-            searchResults,
+            outline: outline as Prisma.InputJsonValue | undefined,
+            searchResults: searchResults as Prisma.InputJsonValue | undefined,
           },
         },
       },
@@ -397,14 +397,17 @@ export async function duplicatePresentation(id: string, newTitle?: string) {
         isPublic: false,
         presentation: {
           create: {
-            content: original.presentation.content as PresentationContent,
+            content: original.presentation.content as Prisma.InputJsonValue,
             theme: original.presentation.theme,
             imageSource: original.presentation.imageSource,
             prompt: original.presentation.prompt ?? undefined,
             presentationStyle: original.presentation.presentationStyle ?? undefined,
             language: original.presentation.language ?? undefined,
-            outline: original.presentation.outline,
-            searchResults: original.presentation.searchResults ?? undefined,
+            outline: original.presentation.outline as Prisma.InputJsonValue,
+            searchResults:
+              original.presentation.searchResults === null
+                ? undefined
+                : (original.presentation.searchResults as Prisma.InputJsonValue),
             customThemeId: original.presentation.customThemeId ?? undefined,
           },
         },

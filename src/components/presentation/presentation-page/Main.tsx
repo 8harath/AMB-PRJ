@@ -23,6 +23,14 @@ import { LoadingState } from "./Loading";
 import { PresentationLayout } from "./PresentationLayout";
 import { PresentationSlidesView } from "./PresentationSlidesView";
 
+function normalizeOutline(outline: unknown): string[] {
+  if (!Array.isArray(outline)) {
+    return [];
+  }
+
+  return outline.filter((item): item is string => typeof item === "string");
+}
+
 export default function PresentationPage() {
   const params = useParams();
   const id = params.id as string;
@@ -172,7 +180,7 @@ export default function PresentationPage() {
 
       // Set outline
       if (presentationData.presentation?.outline) {
-        setOutline(presentationData.presentation.outline);
+        setOutline(normalizeOutline(presentationData.presentation.outline));
       }
 
       // Set theme if available
