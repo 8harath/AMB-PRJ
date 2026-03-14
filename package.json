@@ -10,7 +10,7 @@
     "db:studio": "prisma studio",
     "dev": "next dev --turbo",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push && next build --turbo",
+    "vercel-build": "node scripts/vercel-build.mjs",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
     "check": "biome check .",
