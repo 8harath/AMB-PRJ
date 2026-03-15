@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function SharedPresentationPage() {
@@ -9,9 +10,12 @@ export default function SharedPresentationPage() {
         This deployment runs in instant mode, so presentations are generated in-session only and
         are not stored on the server.
       </p>
-      <Button asChild>
-        <Link href="/presentation">Back to dashboard</Link>
-      </Button>
+      <Link
+        href="/presentation"
+        className={cn(buttonVariants({ variant: "default", size: "default" }))}
+      >
+        Back to dashboard
+      </Link>
     </div>
   );
 }

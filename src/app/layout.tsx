@@ -1,4 +1,5 @@
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import "@/styles/globals.css";
@@ -27,9 +28,12 @@ export default async function RootLayout({
             <header className="pointer-events-none fixed right-4 top-4 z-50">
               <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
                 <span className="text-sm text-muted-foreground">Local mode</span>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/presentation">Dashboard</Link>
-                </Button>
+                <Link
+                  href="/presentation"
+                  className={cn(buttonVariants({ size: "sm", variant: "outline" }))}
+                >
+                  Dashboard
+                </Link>
               </div>
             </header>
             {children}
