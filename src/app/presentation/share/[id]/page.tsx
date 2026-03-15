@@ -1,38 +1,17 @@
-import { getSharedPresentation } from "@/app/_actions/presentation/sharedPresentationActions";
-import { SharedPresentationView } from "@/components/presentation/presentation-page/SharedPresentationView";
-import { type ThemeProperties } from "@/lib/presentation/themes";
-import { type PlateSlide } from "@/components/presentation/utils/parser";
-import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
-export default async function SharedPresentationPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const result = await getSharedPresentation(params.id);
-
-  if (!result.success || !result.presentation?.presentation) {
-    notFound();
-  }
-
-  const presentationContent = result.presentation.presentation.content as {
-    slides?: unknown[];
-    config?: Record<string, unknown>;
-  };
-
+export default function SharedPresentationPage() {
   return (
-    <SharedPresentationView
-      presentationId={result.presentation.id}
-      title={result.presentation.title}
-      authorName={result.presentation.user?.name}
-      slides={(presentationContent.slides ?? []) as PlateSlide[]}
-      theme={result.presentation.presentation.theme}
-      customThemeData={
-        (result.presentation.presentation.customTheme?.themeData as
-          | ThemeProperties
-          | undefined) ?? null
-      }
-      config={presentationContent.config}
-    />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+      <h1 className="text-3xl font-semibold">Sharing is unavailable</h1>
+      <p className="max-w-xl text-muted-foreground">
+        This deployment runs in instant mode, so presentations are generated in-session only and
+        are not stored on the server.
+      </p>
+      <Button asChild>
+        <Link href="/presentation">Back to dashboard</Link>
+      </Button>
+    </div>
   );
 }
