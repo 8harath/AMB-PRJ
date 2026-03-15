@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { usePresentationState } from "@/states/presentation-state";
 import { useTheme } from "next-themes";
 import { ImageSourceSelector } from "./ImageSourceSelector";
-import { ThemeModal } from "./ThemeModal";
 
 const PRESENTATION_STYLES = [
   { value: "professional", label: "Professional" },
@@ -41,9 +40,9 @@ export function ThemeSettings() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <Label className="text-sm font-medium">Theme & Layout</Label>
-          <ThemeModal>
-            <Button variant={"link"}>More Themes</Button>
-          </ThemeModal>
+          <Button variant={"link"} disabled>
+            Built-in themes only
+          </Button>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Object.entries(themes).map(([key, themeOption]) => {

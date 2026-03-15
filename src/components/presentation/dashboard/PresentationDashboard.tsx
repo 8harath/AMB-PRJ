@@ -1,6 +1,5 @@
 "use client";
 
-import { createEmptyPresentation } from "@/app/_actions/presentation/presentationActions";
 import { Button } from "@/components/ui/button";
 import { usePresentationState } from "@/states/presentation-state";
 import { Wand2 } from "lucide-react";
@@ -11,8 +10,6 @@ import { PresentationControls } from "./PresentationControls";
 import { PresentationExamples } from "./PresentationExamples";
 import { PresentationHeader } from "./PresentationHeader";
 import { PresentationInput } from "./PresentationInput";
-import { PresentationsSidebar } from "./PresentationsSidebar";
-import { RecentPresentations } from "./RecentPresentations";
 
 export function PresentationDashboard({
   sidebarSide,
@@ -47,33 +44,19 @@ export function PresentationDashboard({
     setIsGeneratingOutline(true);
 
     try {
-      const result = await createEmptyPresentation(
-        presentationInput.substring(0, 50) || "Untitled Presentation",
-        theme,
-        language,
-      );
-
-      if (result.success && result.presentation) {
-        // Set the current presentation
-        setCurrentPresentation(
-          result.presentation.id,
-          result.presentation.title,
-        );
-        router.push(`/presentation/generate/${result.presentation.id}`);
-      } else {
-        setIsGeneratingOutline(false);
-        toast.error(result.message || "Failed to create presentation");
-      }
+      const tempId = `session-${Date.now()}`;
+      const tempTitle = presentationInput.substring(0, 50) || "Untitled Presentation";
+      setCurrentPresentation(tempId, tempTitle);
+      router.push(`/presentation/generate/${tempId}`);
     } catch (error) {
       setIsGeneratingOutline(false);
-      console.error("Error creating presentation:", error);
-      toast.error("Failed to create presentation");
+      console.error("Error starting presentation:", error);
+      toast.error("Failed to start presentation generation");
     }
   };
 
   return (
     <div className="notebook-section relative h-full w-full">
-      <PresentationsSidebar side={sidebarSide} />
       <div className="mx-auto max-w-4xl space-y-12 px-6 py-12">
         <PresentationHeader />
 
@@ -97,7 +80,6 @@ export function PresentationDashboard({
         </div>
 
         <PresentationExamples />
-        <RecentPresentations />
       </div>
     </div>
   );

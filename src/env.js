@@ -3,8 +3,6 @@ import { z } from "zod";
 
 export const env = createEnv({
   server: {
-    DATABASE_URL: z.string().url(),
-    DIRECT_URL: z.string().url().optional(),
     TAVILY_API_KEY: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
@@ -18,8 +16,6 @@ export const env = createEnv({
   },
 
   runtimeEnv: {
-    DATABASE_URL: process.env.DATABASE_URL,
-    DIRECT_URL: process.env.DIRECT_URL,
     UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY,
     UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
     TAVILY_API_KEY: process.env.TAVILY_API_KEY,

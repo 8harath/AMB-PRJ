@@ -1,7 +1,5 @@
-import { fetchPresentations } from "@/app/_actions/presentation/fetchPresentations";
 import { Button } from "@/components/ui/button";
 import { usePresentationState } from "@/states/presentation-state";
-import { useInfiniteQuery } from "@tanstack/react-query";
 import { Shuffle } from "lucide-react";
 import { useState } from "react";
 
@@ -156,24 +154,6 @@ export function PresentationExamples() {
   const [examples, setExamples] = useState(EXAMPLE_PROMPTS.slice(0, 6));
   const { setNumSlides, setLanguage, setPageStyle, setPresentationInput } =
     usePresentationState();
-
-  // Use useQuery to subscribe to the same data as RecentPresentations
-  const { data, isLoading: isPresentationsLoading } = useInfiniteQuery({
-    queryKey: ["presentations-all"],
-    queryFn: async ({ pageParam = 0 }) => {
-      const response = await fetchPresentations(pageParam);
-      return response;
-    },
-    initialPageParam: 0,
-    getNextPageParam: (lastPage) => (lastPage?.hasMore ? 0 : 0),
-  });
-
-  // Check if there are any actual presentations in the data
-  const presentationsPages = data?.pages;
-  const hasPresentations = !!presentationsPages?.[0]?.items?.length;
-
-  // Don't show examples if presentations are still loading OR if there are presentations
-  if (isPresentationsLoading || hasPresentations) return null;
 
   const handleExampleClick = (example: (typeof EXAMPLE_PROMPTS)[0]) => {
     setPresentationInput(example.title);
