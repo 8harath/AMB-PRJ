@@ -36,7 +36,7 @@ export async function createPresentation({
 export async function createEmptyPresentation(
   title: string,
   _theme = "mystique",
-  _language = "en-US",
+  _language = "en-IN",
 ) {
   return createPresentation({
     content: { slides: [] },
