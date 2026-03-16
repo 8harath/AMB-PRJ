@@ -1,5 +1,3 @@
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 export default function SharedPresentationPage() {
@@ -12,7 +10,7 @@ export default function SharedPresentationPage() {
       </p>
       <Link
         href="/presentation"
-        className={cn(buttonVariants({ variant: "default", size: "default" }))}
+        className="inline-flex h-10 items-center justify-center whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground ring-offset-background transition-all duration-150 hover:bg-primary/90 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
         Back to dashboard
       </Link>
