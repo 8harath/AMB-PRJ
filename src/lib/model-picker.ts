@@ -1,7 +1,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { type LanguageModelV1 } from "ai";
 
-export const DEFAULT_GEMINI_MODEL = "gemini-2.5-pro";
+export const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 
 export function modelPicker(modelId?: string): LanguageModelV1 {
   const google = createGoogleGenerativeAI({

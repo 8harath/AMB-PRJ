@@ -147,7 +147,7 @@ export const usePresentationState = create<PresentationState>((set) => ({
   stockImageProvider: "unsplash",
   presentationStyle: "professional",
   modelProvider: "gemini",
-  modelId: "gemini-2.5-pro",
+  modelId: "gemini-2.5-flash",
   slides: [], // Now holds the new slide object structure
   outlineThinking: "",
   presentationThinking: "",
