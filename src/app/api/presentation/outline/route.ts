@@ -1,4 +1,4 @@
-import { modelPicker } from "@/lib/model-picker";
+import { DEFAULT_GEMINI_MODEL, modelPicker } from "@/lib/model-picker";
 import { streamText } from "ai";
 import { NextResponse } from "next/server";
 
@@ -6,7 +6,6 @@ interface OutlineRequest {
   prompt: string;
   numberOfCards: number;
   language: string;
-  modelProvider?: string;
   modelId?: string;
 }
 
@@ -54,7 +53,6 @@ export async function POST(req: Request) {
       prompt,
       numberOfCards,
       language,
-      modelProvider = "gemini",
       modelId,
     } = (await req.json()) as OutlineRequest;
 
@@ -65,18 +63,18 @@ export async function POST(req: Request) {
       );
     }
     const languageMap: Record<string, string> = {
-      "en-US": "English (US)",
-      pt: "Portuguese",
-      es: "Spanish",
-      fr: "French",
-      de: "German",
-      it: "Italian",
-      ja: "Japanese",
-      ko: "Korean",
-      zh: "Chinese",
-      ru: "Russian",
+      "en-IN": "English (India)",
       hi: "Hindi",
-      ar: "Arabic",
+      bn: "Bengali",
+      ta: "Tamil",
+      te: "Telugu",
+      mr: "Marathi",
+      gu: "Gujarati",
+      kn: "Kannada",
+      ml: "Malayalam",
+      pa: "Punjabi",
+      or: "Odia",
+      as: "Assamese",
     };
 
     const actualLanguage = languageMap[language] ?? language; // Fallback to the original if not found
@@ -87,7 +85,7 @@ export async function POST(req: Request) {
       day: "numeric",
     });
 
-    const model = modelPicker(modelProvider, modelId);
+    const model = modelPicker(modelId || DEFAULT_GEMINI_MODEL);
 
     // Format the prompt with template variables
     const formattedPrompt = outlineTemplate

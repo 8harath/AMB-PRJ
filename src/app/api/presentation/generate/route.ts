@@ -1,4 +1,4 @@
-import { modelPicker } from "@/lib/model-picker";
+import { DEFAULT_GEMINI_MODEL, modelPicker } from "@/lib/model-picker";
 import { streamText } from "ai";
 import { NextResponse } from "next/server";
 // Use AI SDK types for proper type safety
@@ -9,7 +9,6 @@ interface SlidesRequest {
   outline: string[]; // Array of main topics with markdown content
   language: string; // Language to use for the slides
   tone: string; // Style for image queries (optional)
-  modelProvider?: string; // Model provider (openai, ollama, or lmstudio)
   modelId?: string; // Specific model ID for the provider
   searchResults?: Array<{ query: string; results: unknown[] }>; // Search results for context
 }
@@ -238,7 +237,6 @@ export async function POST(req: Request) {
       outline,
       language,
       tone,
-      modelProvider = "gemini",
       modelId,
       searchResults,
     } = (await req.json()) as SlidesRequest;
@@ -286,7 +284,7 @@ export async function POST(req: Request) {
       day: "numeric",
     });
 
-    const model = modelPicker(modelProvider, modelId);
+    const model = modelPicker(modelId || DEFAULT_GEMINI_MODEL);
 
     // Format the prompt with template variables
     const formattedPrompt = slidesTemplate
