@@ -2,6 +2,7 @@
 
 import { generateImageAction } from "@/app/_actions/image/generate";
 import { getImageFromUnsplash } from "@/app/_actions/image/unsplash";
+import { updatePresentation } from "@/app/_actions/presentation/presentationActions";
 import { extractThinking } from "@/lib/thinking-extractor";
 import { usePresentationState } from "@/states/presentation-state";
 import { useChat, useCompletion } from "@ai-sdk/react";
@@ -347,7 +348,27 @@ export function PresentationGenerationManager() {
         currentPresentationTitle,
         theme,
         imageSource,
+        language: lang,
+        presentationInput: input,
       } = usePresentationState.getState();
+
+      // Auto-save outline to database
+      if (currentPresentationId && !currentPresentationId.startsWith("session-")) {
+        updatePresentation({
+          id: currentPresentationId,
+          title: currentPresentationTitle || undefined,
+          outline,
+          searchResults,
+          theme: String(theme),
+          imageSource,
+          language: lang,
+          prompt: input || undefined,
+        }).catch((err) => {
+          console.error("Failed to auto-save outline:", err);
+          toast.error("Failed to save outline — your work is in memory only");
+        });
+      }
+
       // Cancel any pending outline animation frame
       if (outlineRafIdRef.current !== null) {
         cancelAnimationFrame(outlineRafIdRef.current);
@@ -437,6 +458,25 @@ export function PresentationGenerationManager() {
       onFinish: (_prompt, _completion) => {
         setIsGeneratingPresentation(false);
         setShouldStartPresentationGeneration(false);
+
+        // Auto-save to database
+        const state = usePresentationState.getState();
+        if (state.currentPresentationId && !state.currentPresentationId.startsWith("session-")) {
+          updatePresentation({
+            id: state.currentPresentationId,
+            content: { slides: state.slides, config: state.config },
+            title: state.currentPresentationTitle || undefined,
+            theme: String(state.theme),
+            prompt: state.presentationInput || undefined,
+            outline: state.outline,
+            imageSource: state.imageSource,
+            presentationStyle: state.presentationStyle || undefined,
+            language: state.language,
+          }).catch((err) => {
+            console.error("Failed to auto-save presentation:", err);
+            toast.error("Failed to save presentation — your work is in memory only");
+          });
+        }
       },
       onError: (error) => {
         toast.error("Failed to generate presentation: " + error.message);

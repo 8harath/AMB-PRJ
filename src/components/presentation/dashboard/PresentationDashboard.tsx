@@ -1,15 +1,29 @@
 "use client";
 
+import {
+  createPresentation,
+  deletePresentation,
+  listPresentations,
+} from "@/app/_actions/presentation/presentationActions";
 import { Button } from "@/components/ui/button";
 import { usePresentationState } from "@/states/presentation-state";
-import { Wand2 } from "lucide-react";
+import { Trash2, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PresentationControls } from "./PresentationControls";
 import { PresentationExamples } from "./PresentationExamples";
 import { PresentationHeader } from "./PresentationHeader";
 import { PresentationInput } from "./PresentationInput";
+
+interface SavedPresentation {
+  id: string;
+  title: string;
+  theme: string;
+  thumbnailUrl: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export function PresentationDashboard({
   sidebarSide,
@@ -17,6 +31,8 @@ export function PresentationDashboard({
   sidebarSide?: "left" | "right";
 }) {
   const router = useRouter();
+  const [savedPresentations, setSavedPresentations] = useState<SavedPresentation[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
   const {
     presentationInput,
     isGeneratingOutline,
@@ -29,10 +45,28 @@ export function PresentationDashboard({
 
   useEffect(() => {
     setCurrentPresentation("", "");
-    // Make sure to reset any generation flags when landing on dashboard
     setIsGeneratingOutline(false);
     setShouldStartOutlineGeneration(false);
+    loadPresentations();
+
+    // Refresh list when tab regains focus (e.g. after navigating back)
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        loadPresentations();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
+
+  const loadPresentations = async () => {
+    setLoadingList(true);
+    const result = await listPresentations();
+    if (result.success) {
+      setSavedPresentations(result.presentations);
+    }
+    setLoadingList(false);
+  };
 
   const handleGenerate = async () => {
     if (!presentationInput.trim()) {
@@ -40,18 +74,36 @@ export function PresentationDashboard({
       return;
     }
 
-    // Set UI loading state
     setIsGeneratingOutline(true);
 
     try {
-      const tempId = `session-${Date.now()}`;
-      const tempTitle = presentationInput.substring(0, 50) || "Untitled Presentation";
-      setCurrentPresentation(tempId, tempTitle);
-      router.push(`/presentation/generate/${tempId}`);
+      const result = await createPresentation({
+        content: { slides: [] },
+        title: presentationInput.substring(0, 100) || "Untitled Presentation",
+        theme: String(theme),
+        language,
+      });
+
+      if (result.success && result.presentation) {
+        setCurrentPresentation(result.presentation.id, result.presentation.title);
+        router.push(`/presentation/generate/${result.presentation.id}`);
+      } else {
+        throw new Error("Failed to create presentation");
+      }
     } catch (error) {
       setIsGeneratingOutline(false);
       console.error("Error starting presentation:", error);
       toast.error("Failed to start presentation generation");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const result = await deletePresentation(id);
+    if (result.success) {
+      setSavedPresentations((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Presentation deleted");
+    } else {
+      toast.error("Failed to delete presentation");
     }
   };
 
@@ -80,6 +132,40 @@ export function PresentationDashboard({
         </div>
 
         <PresentationExamples />
+
+        {/* Saved Presentations */}
+        {!loadingList && savedPresentations.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold">My Presentations</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {savedPresentations.map((pres) => (
+                <div
+                  key={pres.id}
+                  className="group relative cursor-pointer rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50"
+                  onClick={() => router.push(`/presentation/${pres.id}`)}
+                >
+                  <h3 className="line-clamp-2 font-medium">{pres.title}</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(pres.updatedAt).toLocaleDateString()}
+                  </p>
+                  <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 text-xs">
+                    {pres.theme}
+                  </span>
+                  <button
+                    type="button"
+                    className="absolute right-2 top-2 rounded p-1 opacity-0 transition-opacity hover:bg-destructive/10 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(pres.id);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
