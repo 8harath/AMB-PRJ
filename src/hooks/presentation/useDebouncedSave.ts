@@ -1,3 +1,4 @@
+import { updatePresentation } from "@/app/_actions/presentation/presentationActions";
 import { usePresentationState } from "@/states/presentation-state";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useRef } from "react";
@@ -23,18 +24,46 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   const debouncedSave = useRef(
     debounce(
       async () => {
-        // Get the latest state directly from the store
         const {
           slides,
           currentPresentationId,
+          currentPresentationTitle,
+          theme,
+          language,
+          outline,
+          presentationInput,
+          presentationStyle,
+          imageSource,
+          config,
         } = usePresentationState.getState();
 
         // Don't save if there's no presentation or slides
         if (!currentPresentationId || slides.length === 0) return;
+        // Don't save session-based (non-DB) presentations
+        if (currentPresentationId.startsWith("session-")) return;
+
         try {
           setSavingStatus("saving");
 
-          setSavingStatus("saved");
+          const result = await updatePresentation({
+            id: currentPresentationId,
+            content: { slides, config },
+            title: currentPresentationTitle || undefined,
+            theme: String(theme),
+            language,
+            outline,
+            prompt: presentationInput || undefined,
+            presentationStyle: presentationStyle || undefined,
+            imageSource,
+          });
+
+          if (result.success) {
+            setSavingStatus("saved");
+          } else {
+            console.error("Failed to save presentation:", result.message);
+            setSavingStatus("idle");
+          }
+
           // Reset to idle after 2 seconds
           setTimeout(() => {
             setSavingStatus("idle");
@@ -60,20 +89,44 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   const saveImmediately = useCallback(async () => {
     debouncedSave.cancel();
 
-    // Get the latest state directly from the store
     const {
       slides,
       currentPresentationId,
+      currentPresentationTitle,
+      theme,
+      language,
+      outline,
+      presentationInput,
+      presentationStyle,
+      imageSource,
+      config,
     } = usePresentationState.getState();
 
-    // Don't save if there's no presentation
     if (!currentPresentationId || slides.length === 0) return;
+    if (currentPresentationId.startsWith("session-")) return;
 
     try {
       setSavingStatus("saving");
 
-      setSavingStatus("saved");
-      // Reset to idle after 2 seconds
+      const result = await updatePresentation({
+        id: currentPresentationId,
+        content: { slides, config },
+        title: currentPresentationTitle || undefined,
+        theme: String(theme),
+        language,
+        outline,
+        prompt: presentationInput || undefined,
+        presentationStyle: presentationStyle || undefined,
+        imageSource,
+      });
+
+      if (result.success) {
+        setSavingStatus("saved");
+      } else {
+        console.error("Failed to save presentation:", result.message);
+        setSavingStatus("idle");
+      }
+
       setTimeout(() => {
         setSavingStatus("idle");
       }, 2000);
