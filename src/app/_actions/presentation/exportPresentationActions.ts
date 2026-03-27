@@ -1,5 +1,8 @@
 "use server";
 
+// PPT export is handled client-side via convertPlateJSToPPTX in ExportButton.tsx.
+// This server action is kept as a placeholder for future server-side export features (e.g. PDF).
+
 export async function exportPresentation(
   _presentationId: string,
   _fileName?: string,
@@ -15,7 +18,6 @@ export async function exportPresentation(
 ) {
   return {
     success: false,
-    error:
-      "Export is unavailable in instant mode because presentations are not stored on the server.",
+    error: "Server-side export is not implemented. Use the client-side Export button instead.",
   };
 }
