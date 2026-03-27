@@ -1,4 +1,4 @@
-import { DEFAULT_GEMINI_MODEL, modelPicker } from "@/lib/model-picker";
+import { DEFAULT_MODEL, modelPicker } from "@/lib/model-picker";
 import { streamText } from "ai";
 import { NextResponse } from "next/server";
 // Use AI SDK types for proper type safety
@@ -284,7 +284,7 @@ export async function POST(req: Request) {
       day: "numeric",
     });
 
-    const model = modelPicker(modelId || DEFAULT_GEMINI_MODEL);
+    const model = modelPicker(modelId || DEFAULT_MODEL);
 
     // Format the prompt with template variables
     const formattedPrompt = slidesTemplate

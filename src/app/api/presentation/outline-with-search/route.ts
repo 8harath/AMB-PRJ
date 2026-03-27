@@ -1,4 +1,4 @@
-import { DEFAULT_GEMINI_MODEL, modelPicker } from "@/lib/model-picker";
+import { DEFAULT_MODEL, modelPicker } from "@/lib/model-picker";
 import { streamText } from "ai";
 import { NextResponse } from "next/server";
 import { search_tool } from "./search_tool";
@@ -92,28 +92,48 @@ export async function POST(req: Request) {
     });
 
     // Create model based on selection
-    const model = modelPicker(modelId || DEFAULT_GEMINI_MODEL);
+    const model = modelPicker(modelId || DEFAULT_MODEL);
 
-    const result = streamText({
-      model,
-      system: outlineSystemPrompt
-        .replace("{numberOfCards}", numberOfCards.toString())
-        .replace("{language}", actualLanguage)
-        .replace("{currentDate}", currentDate),
-      messages: [
-        {
-          role: "user",
-          content: `Create a presentation outline for: ${prompt}`,
+    const systemPrompt = outlineSystemPrompt
+      .replace("{numberOfCards}", numberOfCards.toString())
+      .replace("{language}", actualLanguage)
+      .replace("{currentDate}", currentDate);
+
+    // Try with tool calling first; fall back to plain generation if the provider doesn't support it
+    try {
+      const result = streamText({
+        model,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Create a presentation outline for: ${prompt}`,
+          },
+        ],
+        tools: {
+          webSearch: search_tool,
         },
-      ],
-      tools: {
-        webSearch: search_tool,
-      },
-      maxSteps: 5, // Allow up to 5 tool calls
-      toolChoice: "auto", // Let the model decide when to use tools
-    });
+        maxSteps: 5,
+        toolChoice: "auto",
+      });
 
-    return result.toDataStreamResponse();
+      return result.toDataStreamResponse();
+    } catch (toolError) {
+      console.warn("Tool calling failed, falling back to plain generation:", toolError);
+
+      const result = streamText({
+        model,
+        system: systemPrompt,
+        messages: [
+          {
+            role: "user",
+            content: `Create a presentation outline for: ${prompt}`,
+          },
+        ],
+      });
+
+      return result.toDataStreamResponse();
+    }
   } catch (error) {
     console.error("Error in outline generation with search:", error);
     return NextResponse.json(

@@ -21,7 +21,7 @@ interface PresentationState {
   imageSource: "ai" | "stock";
   stockImageProvider: "unsplash";
   presentationStyle: string;
-  modelProvider: "gemini";
+  modelProvider: "groq";
   modelId: string;
   savingStatus: "idle" | "saving" | "saved";
   isPresenting: boolean;
@@ -91,7 +91,7 @@ interface PresentationState {
   setImageSource: (source: "ai" | "stock") => void;
   setStockImageProvider: (provider: "unsplash") => void;
   setPresentationStyle: (style: string) => void;
-  setModelProvider: (provider: "gemini") => void;
+  setModelProvider: (provider: "groq") => void;
   setModelId: (id: string) => void;
   setSavingStatus: (status: "idle" | "saving" | "saved") => void;
   setIsPresenting: (isPresenting: boolean) => void;
@@ -146,8 +146,8 @@ export const usePresentationState = create<PresentationState>((set) => ({
   imageSource: "stock",
   stockImageProvider: "unsplash",
   presentationStyle: "professional",
-  modelProvider: "gemini",
-  modelId: "gemini-2.5-flash",
+  modelProvider: "groq",
+  modelId: "llama-3.3-70b-versatile",
   slides: [], // Now holds the new slide object structure
   outlineThinking: "",
   presentationThinking: "",
