@@ -82,19 +82,31 @@ export function PresentationDashboard({
     setIsGeneratingOutline(true);
 
     try {
-      const result = await createPresentation({
-        content: { slides: [] },
-        title: presentationInput.substring(0, 100) || "Untitled Presentation",
-        theme: String(theme),
-        language,
-      });
+      const tempTitle = presentationInput.substring(0, 100) || "Untitled Presentation";
+      let presId: string;
 
-      if (result.success && result.presentation) {
-        setCurrentPresentation(result.presentation.id, result.presentation.title);
-        router.push(`/presentation/generate/${result.presentation.id}`);
-      } else {
-        throw new Error("Failed to create presentation");
+      try {
+        const result = await createPresentation({
+          content: { slides: [] },
+          title: tempTitle,
+          theme: String(theme),
+          language,
+        });
+
+        if (result.success && result.presentation) {
+          presId = result.presentation.id;
+        } else {
+          // DB failed — fall back to session mode
+          presId = `session-${Date.now()}`;
+        }
+      } catch {
+        // DB unreachable — fall back to session mode
+        presId = `session-${Date.now()}`;
+        console.warn("DB unavailable, using session mode");
       }
+
+      setCurrentPresentation(presId, tempTitle);
+      router.push(`/presentation/generate/${presId}`);
     } catch (error) {
       setIsGeneratingOutline(false);
       console.error("Error starting presentation:", error);
