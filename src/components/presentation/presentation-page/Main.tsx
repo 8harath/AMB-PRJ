@@ -1,7 +1,7 @@
 "use client";
 
-import { getPresentation } from "@/app/_actions/presentation/presentationActions";
 import { type PlateSlide } from "@/components/presentation/utils/parser";
+import { presentationStorage } from "@/lib/presentation-storage";
 import {
   setThemeVariables,
   type ThemeProperties,
@@ -29,7 +29,7 @@ export default function PresentationPage() {
   const router = useRouter();
   const id = params.id as string;
   const { resolvedTheme } = useTheme();
-  const [isLoadingFromDb, setIsLoadingFromDb] = useState(false);
+  const [isLoadingFromStorage, setIsLoadingFromStorage] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const setCurrentPresentation = usePresentationState(
     (s) => s.setCurrentPresentation,
@@ -44,12 +44,10 @@ export default function PresentationPage() {
     (s) => s.isGeneratingPresentation,
   );
   const setTheme = usePresentationState((s) => s.setTheme);
-  const setImageModel = usePresentationState((s) => s.setImageModel);
   const setImageSource = usePresentationState((s) => s.setImageSource);
   const setPresentationStyle = usePresentationState(
     (s) => s.setPresentationStyle,
   );
-  const currentSlideIndex = usePresentationState((s) => s.currentSlideIndex);
   const setLanguage = usePresentationState((s) => s.setLanguage);
   const theme = usePresentationState((s) => s.theme);
   const currentPresentationId = usePresentationState((s) => s.currentPresentationId);
@@ -59,47 +57,37 @@ export default function PresentationPage() {
   const slides = usePresentationState((s) => s.slides);
   const config = usePresentationState((s) => s.config);
 
-  // Load from DB if the presentation isn't in Zustand state
+  // Load from localStorage if the presentation isn't in Zustand state
   useEffect(() => {
     if (currentPresentationId === id) return;
 
-    async function loadFromDb() {
-      setIsLoadingFromDb(true);
-      setLoadError(null);
-      try {
-        const result = await getPresentation(id);
-        if (result.success && result.presentation) {
-          const p = result.presentation;
-          setCurrentPresentation(id, p.title);
-          setPresentationInput(p.prompt || p.title);
-          setOutline(normalizeOutline(p.outline));
-          if (p.theme && p.theme in themes) {
-            setTheme(p.theme as Themes);
-          }
-          if (p.language) setLanguage(p.language);
-          if (p.presentationStyle) setPresentationStyle(p.presentationStyle);
-          if (p.imageSource) setImageSource(p.imageSource as "ai" | "stock");
-          if (p.thumbnailUrl) setThumbnailUrl(p.thumbnailUrl);
+    setIsLoadingFromStorage(true);
+    setLoadError(null);
 
-          // Load slides from content
-          const content = p.content as { slides?: PlateSlide[]; config?: Record<string, unknown> } | null;
-          if (content?.slides && content.slides.length > 0) {
-            setSlides(content.slides);
-          }
-          if (content?.config) {
-            usePresentationState.getState().setConfig(content.config);
-          }
-        } else {
-          setLoadError("Presentation not found");
-        }
-      } catch {
-        setLoadError("Failed to load presentation");
-      } finally {
-        setIsLoadingFromDb(false);
+    const stored = presentationStorage.get(id);
+    if (stored) {
+      setCurrentPresentation(id, stored.title);
+      setPresentationInput(stored.prompt || stored.title);
+      setOutline(normalizeOutline(stored.outline));
+      if (stored.theme && stored.theme in themes) {
+        setTheme(stored.theme as Themes);
       }
+      if (stored.language) setLanguage(stored.language);
+      if (stored.presentationStyle) setPresentationStyle(stored.presentationStyle);
+      if (stored.imageSource) setImageSource(stored.imageSource as "ai" | "stock");
+      if (stored.thumbnailUrl) setThumbnailUrl(stored.thumbnailUrl);
+
+      if (stored.content?.slides && stored.content.slides.length > 0) {
+        setSlides(stored.content.slides);
+      }
+      if (stored.content?.config) {
+        usePresentationState.getState().setConfig(stored.content.config);
+      }
+    } else {
+      setLoadError("Presentation not found");
     }
 
-    loadFromDb();
+    setIsLoadingFromStorage(false);
   }, [id, currentPresentationId]);
 
   useEffect(() => {
@@ -144,12 +132,9 @@ export default function PresentationPage() {
   useEffect(() => {
     if (theme && resolvedTheme) {
       const state = usePresentationState.getState();
-      // Check if we have custom theme data
       if (state.customThemeData) {
         setThemeVariables(state.customThemeData, resolvedTheme === "dark");
-      }
-      // Otherwise try to use a predefined theme
-      else if (typeof theme === "string" && theme in themes) {
+      } else if (typeof theme === "string" && theme in themes) {
         const currentTheme = themes[theme as keyof typeof themes];
         if (currentTheme) {
           setThemeVariables(currentTheme, resolvedTheme === "dark");
@@ -158,7 +143,6 @@ export default function PresentationPage() {
     }
   }, [theme, resolvedTheme]);
 
-  // Get the current theme data
   const currentThemeData = (() => {
     const state = usePresentationState.getState();
     if (state.customThemeData) {
@@ -170,7 +154,7 @@ export default function PresentationPage() {
     return null;
   })();
 
-  if (isLoadingFromDb) {
+  if (isLoadingFromStorage) {
     return <LoadingState />;
   }
 

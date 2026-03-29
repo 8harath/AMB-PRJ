@@ -2,7 +2,7 @@
 
 import { generateImageAction } from "@/app/_actions/image/generate";
 import { getImageFromUnsplash } from "@/app/_actions/image/unsplash";
-import { updatePresentation } from "@/app/_actions/presentation/presentationActions";
+import { presentationStorage } from "@/lib/presentation-storage";
 import { extractThinking } from "@/lib/thinking-extractor";
 import { usePresentationState } from "@/states/presentation-state";
 import { useChat, useCompletion } from "@ai-sdk/react";
@@ -352,10 +352,9 @@ export function PresentationGenerationManager() {
         presentationInput: input,
       } = usePresentationState.getState();
 
-      // Auto-save outline to database
-      if (currentPresentationId && !currentPresentationId.startsWith("session-")) {
-        updatePresentation({
-          id: currentPresentationId,
+      // Auto-save outline to localStorage
+      if (currentPresentationId) {
+        presentationStorage.update(currentPresentationId, {
           title: currentPresentationTitle || undefined,
           outline,
           searchResults,
@@ -363,9 +362,6 @@ export function PresentationGenerationManager() {
           imageSource,
           language: lang,
           prompt: input || undefined,
-        }).catch((err) => {
-          console.error("Failed to auto-save outline:", err);
-          toast.error("Failed to save outline — your work is in memory only");
         });
       }
 
@@ -459,11 +455,10 @@ export function PresentationGenerationManager() {
         setIsGeneratingPresentation(false);
         setShouldStartPresentationGeneration(false);
 
-        // Auto-save to database
+        // Auto-save to localStorage
         const state = usePresentationState.getState();
-        if (state.currentPresentationId && !state.currentPresentationId.startsWith("session-")) {
-          updatePresentation({
-            id: state.currentPresentationId,
+        if (state.currentPresentationId) {
+          presentationStorage.update(state.currentPresentationId, {
             content: { slides: state.slides, config: state.config },
             title: state.currentPresentationTitle || undefined,
             theme: String(state.theme),
@@ -472,9 +467,6 @@ export function PresentationGenerationManager() {
             imageSource: state.imageSource,
             presentationStyle: state.presentationStyle || undefined,
             language: state.language,
-          }).catch((err) => {
-            console.error("Failed to auto-save presentation:", err);
-            toast.error("Failed to save presentation — your work is in memory only");
           });
         }
       },

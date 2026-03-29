@@ -1,11 +1,7 @@
 "use client";
 
-import {
-  createPresentation,
-  deletePresentation,
-  listPresentations,
-} from "@/app/_actions/presentation/presentationActions";
 import { Button } from "@/components/ui/button";
+import { presentationStorage } from "@/lib/presentation-storage";
 import { usePresentationState } from "@/states/presentation-state";
 import { Trash2, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,8 +16,7 @@ interface SavedPresentation {
   id: string;
   title: string;
   theme: string;
-  thumbnailUrl: string | null;
-  createdAt: string;
+  thumbnailUrl?: string | null;
   updatedAt: string;
 }
 
@@ -32,7 +27,6 @@ export function PresentationDashboard({
 }) {
   const router = useRouter();
   const [savedPresentations, setSavedPresentations] = useState<SavedPresentation[]>([]);
-  const [loadingList, setLoadingList] = useState(true);
   const {
     presentationInput,
     isGeneratingOutline,
@@ -43,13 +37,25 @@ export function PresentationDashboard({
     setShouldStartOutlineGeneration,
   } = usePresentationState();
 
+  const loadPresentations = () => {
+    const all = presentationStorage.list();
+    setSavedPresentations(
+      all.map((p) => ({
+        id: p.id,
+        title: p.title,
+        theme: p.theme,
+        thumbnailUrl: p.thumbnailUrl,
+        updatedAt: p.updatedAt,
+      })),
+    );
+  };
+
   useEffect(() => {
     setCurrentPresentation("", "");
     setIsGeneratingOutline(false);
     setShouldStartOutlineGeneration(false);
     loadPresentations();
 
-    // Refresh list when tab regains focus (e.g. after navigating back)
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         loadPresentations();
@@ -58,20 +64,6 @@ export function PresentationDashboard({
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
-
-  const loadPresentations = async () => {
-    setLoadingList(true);
-    try {
-      const result = await listPresentations();
-      if (result.success) {
-        setSavedPresentations(result.presentations);
-      }
-    } catch (error) {
-      console.error("Failed to load presentations:", error);
-    } finally {
-      setLoadingList(false);
-    }
-  };
 
   const handleGenerate = async () => {
     if (!presentationInput.trim()) {
@@ -83,30 +75,18 @@ export function PresentationDashboard({
 
     try {
       const tempTitle = presentationInput.substring(0, 100) || "Untitled Presentation";
-      let presId: string;
+      const pres = presentationStorage.create({
+        title: tempTitle,
+        theme: String(theme),
+        language,
+        content: { slides: [] },
+        outline: [],
+        imageSource: "stock",
+        prompt: presentationInput,
+      });
 
-      try {
-        const result = await createPresentation({
-          content: { slides: [] },
-          title: tempTitle,
-          theme: String(theme),
-          language,
-        });
-
-        if (result.success && result.presentation) {
-          presId = result.presentation.id;
-        } else {
-          // DB failed — fall back to session mode
-          presId = `session-${Date.now()}`;
-        }
-      } catch {
-        // DB unreachable — fall back to session mode
-        presId = `session-${Date.now()}`;
-        console.warn("DB unavailable, using session mode");
-      }
-
-      setCurrentPresentation(presId, tempTitle);
-      router.push(`/presentation/generate/${presId}`);
+      setCurrentPresentation(pres.id, pres.title);
+      router.push(`/presentation/generate/${pres.id}`);
     } catch (error) {
       setIsGeneratingOutline(false);
       console.error("Error starting presentation:", error);
@@ -114,14 +94,10 @@ export function PresentationDashboard({
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const result = await deletePresentation(id);
-    if (result.success) {
-      setSavedPresentations((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Presentation deleted");
-    } else {
-      toast.error("Failed to delete presentation");
-    }
+  const handleDelete = (id: string) => {
+    presentationStorage.delete(id);
+    setSavedPresentations((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Presentation deleted");
   };
 
   return (
@@ -150,8 +126,7 @@ export function PresentationDashboard({
 
         <PresentationExamples />
 
-        {/* Saved Presentations */}
-        {!loadingList && savedPresentations.length > 0 && (
+        {savedPresentations.length > 0 && (
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">My Presentations</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
