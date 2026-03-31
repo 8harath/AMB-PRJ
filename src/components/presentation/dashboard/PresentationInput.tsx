@@ -1,8 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { usePresentationState } from "@/states/presentation-state";
-import { Sparkles } from "lucide-react";
+import { Send } from "lucide-react";
 import { WebSearchToggle } from "./WebSearchToggle";
 
 export function PresentationInput({
@@ -10,53 +9,46 @@ export function PresentationInput({
 }: {
   handleGenerate: () => void;
 }) {
-  const { presentationInput, setPresentationInput, setShowTemplates } =
+  const { presentationInput, setPresentationInput, isGeneratingOutline } =
     usePresentationState();
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-sm font-semibold text-foreground">
-          What would you like to present about?
-        </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowTemplates(true)}
-          className="gap-2 shrink-0"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          Templates
-        </Button>
-      </div>
-
-      <div className="relative group">
+    <div className="space-y-2">
+      <div className="relative">
         <textarea
           value={presentationInput}
           onChange={(e) => setPresentationInput(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && e.ctrlKey) {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
               handleGenerate();
             }
           }}
-          placeholder="Describe your topic or paste your content here. Our AI will structure it into a compelling presentation."
-          className="h-40 w-full resize-none rounded-lg border border-border bg-card px-4 py-3.5 pb-14 text-base text-foreground placeholder:text-muted-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          placeholder="e.g. The impact of artificial intelligence on healthcare in 2025..."
+          rows={4}
+          className="w-full resize-none rounded-xl border border-border bg-card px-4 py-3.5 pb-14 text-base text-foreground placeholder:text-muted-foreground/60 transition-all focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/40"
         />
 
-        <div className="absolute flex justify-between items-center bottom-3 inset-x-3 z-10">
-          <p className="text-xs text-muted-foreground">
-            Press{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px] border border-border">
-              Ctrl
-            </kbd>{" "}
-            +{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px] border border-border">
-              Enter
-            </kbd>{" "}
-            to generate
-          </p>
-          <WebSearchToggle />
+        <div className="absolute bottom-3 inset-x-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <WebSearchToggle />
+            <span className="text-xs text-muted-foreground/50">
+              {presentationInput.length > 0 && `${presentationInput.length} chars`}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-muted/50 px-1.5 py-0.5 text-[10px] text-muted-foreground font-mono">
+              Ctrl+Enter
+            </kbd>
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={!presentationInput.trim() || isGeneratingOutline}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

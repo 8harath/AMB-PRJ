@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/sonner";
 import TanStackQueryProvider from "@/provider/TanstackProvider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import "@/styles/globals.css";
@@ -18,11 +19,12 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <TanStackQueryProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             {children}
+            <Toaster richColors position="bottom-right" />
           </ThemeProvider>
         </TanStackQueryProvider>
       </body>
