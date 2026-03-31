@@ -56,6 +56,7 @@ export default function PresentationGenerateWithIdPage() {
   // Track if this is a fresh navigation or a revisit
   const initialLoadComplete = useRef(false);
   const generationStarted = useRef(false);
+  const syncComplete = useRef(false);
 
   // Function to clear the cookie
   const clearPresentationCookie = () => {
@@ -93,34 +94,18 @@ export default function PresentationGenerateWithIdPage() {
     }
   }, [isGeneratingOutline, setShouldStartOutlineGeneration]);
 
+  // Sync state once on mount — normalizeOutline creates new arrays so this
+  // must NOT re-run when outline/state changes or it infinite-loops.
   useEffect(() => {
-    if (!currentPresentationId || currentPresentationId !== id) {
-      return;
-    }
+    if (syncComplete.current) return;
+    if (!currentPresentationId || currentPresentationId !== id) return;
+    syncComplete.current = true;
 
-    if (currentPresentationTitle) {
-      setCurrentPresentation(currentPresentationId, currentPresentationTitle);
-    }
-    if (presentationInput) {
-      setPresentationInput(presentationInput);
-    }
-    if (outline.length > 0) {
-      setOutline(normalizeOutline(outline));
-    }
     if (!(String(usePresentationState.getState().theme) in themes)) {
       setTheme("mystique" as Themes);
     }
-  }, [
-    currentPresentationId,
-    currentPresentationTitle,
-    id,
-    outline,
-    presentationInput,
-    setCurrentPresentation,
-    setOutline,
-    setPresentationInput,
-    setTheme,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPresentationId, id]);
 
   const handleGenerate = () => {
     router.push(`/presentation/${id}`);

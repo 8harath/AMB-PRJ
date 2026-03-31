@@ -11,7 +11,7 @@ import {
 import { usePresentationState } from "@/states/presentation-state";
 import { useTheme } from "next-themes";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { LoadingState } from "./Loading";
 import { PresentationLayout } from "./PresentationLayout";
 import { PresentationSlidesView } from "./PresentationSlidesView";
@@ -57,9 +57,14 @@ export default function PresentationPage() {
   const slides = usePresentationState((s) => s.slides);
   const config = usePresentationState((s) => s.config);
 
+  const syncedRef = useRef(false);
+
   // Load from localStorage if the presentation isn't in Zustand state
   useEffect(() => {
-    if (currentPresentationId === id) return;
+    if (currentPresentationId === id) {
+      syncedRef.current = true;
+      return;
+    }
 
     setIsLoadingFromStorage(true);
     setLoadError(null);
@@ -87,46 +92,18 @@ export default function PresentationPage() {
       setLoadError("Presentation not found");
     }
 
+    syncedRef.current = true;
     setIsLoadingFromStorage(false);
   }, [id, currentPresentationId]);
 
+  // Validate theme once after initial sync
   useEffect(() => {
-    if (currentPresentationId !== id) {
-      return;
-    }
-
-    if (currentPresentationTitle) {
-      setCurrentPresentation(currentPresentationId, currentPresentationTitle);
-      setPresentationInput(presentationInput || currentPresentationTitle);
-    }
-    if (outline.length > 0) {
-      setOutline(normalizeOutline(outline));
-    }
-    if (slides.length > 0) {
-      setSlides(slides as PlateSlide[]);
-    }
-    if (config.backgroundOverride !== undefined) {
-      const { setConfig } = usePresentationState.getState();
-      setConfig(config);
-    }
+    if (!syncedRef.current || currentPresentationId !== id) return;
     if (!(String(theme) in themes)) {
       setTheme("mystique" as Themes);
     }
-  }, [
-    config,
-    currentPresentationId,
-    currentPresentationTitle,
-    id,
-    outline,
-    presentationInput,
-    setCurrentPresentation,
-    setOutline,
-    setPresentationInput,
-    setSlides,
-    setTheme,
-    slides,
-    theme,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPresentationId, id]);
 
   // Set theme variables when theme changes
   useEffect(() => {
