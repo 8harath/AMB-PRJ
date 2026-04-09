@@ -73,7 +73,7 @@ interface PresentationState {
     customData?: ThemeProperties | null,
   ) => void;
   shouldShowExitHeader: boolean;
-  setShouldShowExitHeader: (udpdate: boolean) => void;
+  setShouldShowExitHeader: (update: boolean) => void;
   thumbnailUrl?: string;
   setThumbnailUrl: (url: string | undefined) => void;
   setLanguage: (lang: string) => void;
@@ -244,7 +244,7 @@ export const usePresentationState = create<PresentationState>((set) => ({
     set((state) => ({
       currentSlideIndex: Math.min(
         state.currentSlideIndex + 1,
-        state.slides.length - 1,
+        Math.max(state.slides.length - 1, 0),
       ),
     })),
   previousSlide: () =>

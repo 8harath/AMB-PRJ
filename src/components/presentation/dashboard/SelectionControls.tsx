@@ -37,6 +37,7 @@ export function SelectionControls({
         variant="outline"
         size="sm"
         onClick={onToggleSelecting}
+        aria-pressed={false}
         className="gap-2"
       >
         <Check className="h-4 w-4" />
@@ -46,11 +47,12 @@ export function SelectionControls({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2" role="toolbar" aria-label="Selection controls">
       <Button
         variant="outline"
         size="sm"
         onClick={onToggleSelecting}
+        aria-pressed={true}
         className="gap-2"
       >
         <X className="h-4 w-4" />
@@ -62,6 +64,7 @@ export function SelectionControls({
           variant="outline"
           size="sm"
           onClick={onDeselectAll}
+          aria-label={`Deselect all ${selectedCount} selected items`}
           className="gap-2"
         >
           Deselect All ({selectedCount})
@@ -71,6 +74,7 @@ export function SelectionControls({
           variant="outline"
           size="sm"
           onClick={onSelectAll}
+          aria-label={`Select all ${totalCount} items`}
           className="gap-2"
         >
           Select All ({totalCount})

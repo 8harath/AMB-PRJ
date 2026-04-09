@@ -3,6 +3,8 @@ import { usePresentationState } from "@/states/presentation-state";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useRef } from "react";
 
+type TimeoutId = ReturnType<typeof setTimeout>;
+
 interface UseDebouncedSaveOptions {
   delay?: number;
 }
@@ -10,6 +12,7 @@ interface UseDebouncedSaveOptions {
 export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   const { delay = 1000 } = options;
   const { setSavingStatus } = usePresentationState();
+  const pendingTimeouts = useRef<TimeoutId[]>([]);
 
   const debouncedSave = useRef(
     debounce(
@@ -44,7 +47,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
           });
 
           setSavingStatus("saved");
-          setTimeout(() => setSavingStatus("idle"), 2000);
+          pendingTimeouts.current.push(setTimeout(() => setSavingStatus("idle"), 2000));
         } catch (error) {
           console.error("Failed to save presentation:", error);
           setSavingStatus("idle");
@@ -58,6 +61,8 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
   useEffect(() => {
     return () => {
       debouncedSave.cancel();
+      pendingTimeouts.current.forEach(clearTimeout);
+      pendingTimeouts.current = [];
     };
   }, [debouncedSave]);
 
@@ -94,7 +99,7 @@ export const useDebouncedSave = (options: UseDebouncedSaveOptions = {}) => {
       });
 
       setSavingStatus("saved");
-      setTimeout(() => setSavingStatus("idle"), 2000);
+      pendingTimeouts.current.push(setTimeout(() => setSavingStatus("idle"), 2000));
     } catch (error) {
       console.error("Failed to save presentation:", error);
       setSavingStatus("idle");

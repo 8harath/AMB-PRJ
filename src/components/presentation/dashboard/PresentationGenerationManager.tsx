@@ -181,6 +181,7 @@ export function PresentationGenerationManager() {
                 );
               } else {
                 failRootImageGeneration(slideId, "No image url returned");
+                toast.error("Could not load an image for one of your slides. You can add one manually.");
               }
             } catch (err) {
               const message =
@@ -385,7 +386,6 @@ export function PresentationGenerationManager() {
 
   // Lightweight useEffect that only schedules RAF updates
   useEffect(() => {
-    console.log("outlineMessages", outlineMessages);
     // Only update if we have new messages
     if (outlineMessages.length > 1) {
       lastProcessedMessagesLength.current = outlineMessages.length;
@@ -568,6 +568,7 @@ export function PresentationGenerationManager() {
                 );
               } else {
                 failRootImageGeneration(slideId, "No image url returned");
+                toast.error("Could not load an image for one of your slides. You can add one manually.");
               }
             } catch (err) {
               const message =
