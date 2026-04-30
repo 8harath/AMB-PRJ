@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(grep -r groq /c/Users/Admin/AMB-PRJ/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r together /c/Users/Admin/AMB-PRJ/src --include=*.ts --include=*.tsx)",
+      "Bash(grep -r \"DATABASE_URL\\\\|DIRECT_URL\" /c/Users/Admin/AMB-PRJ/src --include=*.ts --include=*.tsx)",
+      "Bash(SKIP_ENV_VALIDATION=1 npx next build --turbo)",
+      "Bash(node:*)",
+      "Bash(npm list:*)",
+      "Bash(npm run:*)",
+      "Bash(grep -r \"server/db\\\\|from.*db\" /c/Users/Admin/amb-prj/src --include=*.ts --include=*.tsx --include=*.js)",
+      "Bash(GROQ_API_KEY=test-key npm run build)",
+      "Bash(find /c/Users/Admin/amb-prj/.next -name *.js -type f)",
+      "Bash(xargs grep:*)",
+      "Bash(while read:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)",
+      "Bash(GROQ_API_KEY=test DATABASE_URL=\"\" npx prisma generate)",
+      "Bash(then if:*)",
+      "Bash(GROQ_API_KEY=test_key npx next build --turbo)",
+      "Bash(GROQ_API_KEY=test_key SKIP_ENV_VALIDATION=0 node -e \":*)",
+      "Bash(npx next:*)",
+      "Bash(SKIP_ENV_VALIDATION=1 npx next build)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
