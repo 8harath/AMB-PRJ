@@ -1,5 +1,19 @@
 "use client";
 
-export default function RootImageStatic() {
-  return null; // Image section removed
+import React from "react";
+
+export interface RootImageStaticProps {
+  image: any;
+  layoutType?: string;
+  slideId: string;
 }
+
+const RootImageStatic: React.FC<RootImageStaticProps> = ({
+  image,
+  layoutType,
+  slideId,
+}) => {
+  return null; // Image section removed
+};
+
+export default RootImageStatic;
