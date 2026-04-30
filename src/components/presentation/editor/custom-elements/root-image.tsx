@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { cn } from "@/lib/utils";
 
 export interface RootImageProps {
@@ -9,12 +10,14 @@ export interface RootImageProps {
   slideId: string;
 }
 
-export default function RootImage({
+const RootImage: React.FC<RootImageProps> = ({
   image,
   slideIndex,
   layoutType,
   slideId,
-}: RootImageProps) {
+}) => {
   return null; // Image section removed
-}
+};
+
+export default RootImage;
 
